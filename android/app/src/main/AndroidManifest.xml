@@ -2,6 +2,7 @@
     package="com.example.flutter_swoole_chat">
    <application
         android:label="flutter_swoole_chat"
+        android:usesCleartextTraffic="true" 
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

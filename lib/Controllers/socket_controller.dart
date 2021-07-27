@@ -51,8 +51,15 @@ class SocketController {
   Socket? _socket;
   Chat? _chat;
 
-  ///Current user room subscription
+  ///Current user room subscription.
+  @visibleForTesting
   Chat? get chat => _chat;
+
+  ///Insert new chat into the controller.
+  @visibleForTesting
+  set joinedChat(Chat? chat) {
+    _chat = chat;
+  }
 
   ///`Boolean` represents the state of the socket if it is currently connected.
   bool get connected => _socket!.connected;
@@ -60,16 +67,29 @@ class SocketController {
   ///`Boolean` represents the state of the socket if it is currently diconnected form the server.
   bool get disConnected => !connected;
 
+  StreamController<ChatEvent>? _streamController;
+  @deprecated
+  Stream<ChatEvent>? get stream => _streamController?.stream.asBroadcastStream();
+
+  ValueChanged<ChatEvent>? _listener;
+  void listen({required ValueChanged<ChatEvent> onData}) {
+    _listener = onData;
+  }
+
   /// Initializes the controller and its streams
   ///
   /// see also:
   /// - `connect()`
-  void init() {
-    //TODO: Add headers
+  void init({required String token}) {
     _socket ??= io(
-      NetworkConstants.chatAPI,
-      OptionBuilder().setTransports(['websocket']).disableAutoConnect().setExtraHeaders({}).build(),
+      NetworkConstants.socketURL,
+      OptionBuilder()
+          .setTransports(['websocket'])
+          .disableAutoConnect()
+          .setExtraHeaders({"Authorization": token, "Accept": "application/json"})
+          .build(),
     );
+    _streamController = StreamController.broadcast();
   }
 
   ///initializes the events listeners and sends the events to the stream controller sink
@@ -77,7 +97,9 @@ class SocketController {
     _connectedAssetion();
     final _socket = this._socket!;
 
+    //TODO: `joined_chat` listener doesn't fire.
     _socket.on(enumToString(INEvent.joined_chat), (data) {
+      print(data);
       _chat = Chat.fromJson(data);
     });
 
@@ -130,38 +152,36 @@ class SocketController {
 
   void joinChat(int? chatID, int? toUserID) {
     _connectedAssetion();
+
     final _socket = this._socket!;
     _socket.emit(enumToString(OUTEvent.join_chat), {'chat_id': chatID, 'to_user_id': toUserID});
+    log("Joined to chat with id: $chatID and user id: $toUserID");
   }
 
-  void leaveChat() {
+  Future<void> leaveChat() async {
     _connectedAssetion();
+    if (_chat == null) throw Exception();
     final _socket = this._socket!;
     _socket.emit(enumToString(OUTEvent.leave_chat), {'chat_id': _chat!.id});
-    //TODO: Clear prev chat messages
     _chat = null;
+    return Future<void>.value();
   }
 
   ///Sends a message to the users in the same room.
   ///
-  void sendMessage(ChatMessage message) {
+  void sendTextMessage(ChatMessage message) {
     _connectedAssetion();
     if (_chat == null) throw NotSubscribed();
     final _socket = this._socket!;
 
-    //Stop typing then send a new message.
-    _socket
-      ..emit(
-        enumToString(OUTEvent.stop_typing),
-        {'chat_id': _chat!.id},
-      )
-      ..emit(
-        enumToString(OUTEvent.send_message),
-        {
-          'chat_id': _chat!.id,
-          'message': message.content,
-        },
-      );
+    //Stop typing (Sent from the API) then send a new message.
+    _socket.emit(
+      enumToString(OUTEvent.send_message),
+      {
+        'chat_id': _chat!.id,
+        'message': message.content,
+      },
+    );
 
     _addNewMessage(message);
   }
@@ -199,7 +219,8 @@ class SocketController {
   void _addTypingEvent(UserTyping event) {
     // _events!.removeWhere((e) => e is UserTyping);
     // _events = <ChatEvent>[event, ..._events!];
-    // _newMessagesController?.sink.add(_events!);
+    // _streamController?.sink.add(event);
+    _listener?.call(event);
   }
 
   ///Add new event to the steam sink
@@ -207,7 +228,6 @@ class SocketController {
   ///see also:
   /// * `watchEvents` getter
   void _addEvent(event) {
-    // _events = <ChatEvent>[event, ..._events!];
-    // _newMessagesController?.sink.add(_events!);
+    _listener?.call(event);
   }
 }

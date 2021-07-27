@@ -1,11 +1,15 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_swoole_chat/Controllers/Repositories/user_repository.dart';
 import 'package:flutter_swoole_chat/Helpers/shared_prefs_utils.dart';
 import 'package:flutter_swoole_chat/Screens/home/home_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'Controllers/Providers/auth_provider.dart';
 import 'Controllers/Providers/chat_provider.dart';
+import 'Controllers/Providers/user_provider.dart';
 import 'Controllers/Repositories/auth_repository.dart';
 import 'Screens/auth/auth_screen.dart';
 
@@ -23,6 +27,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   late final AuthRepository _authRepository;
   late final ChatRepository _chatRepository;
+  late final UsersRepository _usersRepository;
   late final Dio _dio;
 
   @override
@@ -30,6 +35,7 @@ class _MyAppState extends State<MyApp> {
     _dio = Dio();
     _authRepository = AuthRepository(dio: _dio);
     _chatRepository = ChatRepository(dio: _dio, authRepository: _authRepository);
+    _usersRepository = UsersRepository(dio: _dio, authRepository: _authRepository);
     super.initState();
   }
 
@@ -45,6 +51,11 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(
           create: (_) => ChatProvider(
             chatRepository: _chatRepository,
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => UsersProvider(
+            usersRepository: _usersRepository,
           ),
         ),
       ],
@@ -73,6 +84,7 @@ class _SplashScreenState extends State<SplashScreen> {
       } else {
         try {
           await _provider.fetchUserData();
+          log(_provider.user.toString());
           Navigator.push(context, MaterialPageRoute(builder: (_) => HomeScreen()));
         } catch (e) {
           print(e);

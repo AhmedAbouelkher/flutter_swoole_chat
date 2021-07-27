@@ -10,6 +10,7 @@ class CTextField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final FormFieldValidator<String>? validator;
   final InputDecoration inputDecoration;
+  final int? maxLines;
 
   const CTextField({
     Key? key,
@@ -22,6 +23,7 @@ class CTextField extends StatefulWidget {
     this.textInputAction,
     this.validator,
     this.inputDecoration = const InputDecoration(),
+    this.maxLines,
   }) : super(key: key);
 
   @override
@@ -36,6 +38,8 @@ class _CTextFieldState extends State<CTextField> {
     return TextFormField(
       initialValue: widget.initialValue,
       controller: widget.controller,
+      minLines: widget.textInputType == TextInputType.multiline ? 1 : null,
+      maxLines: widget.maxLines,
       onChanged: widget.onChanged,
       onFieldSubmitted: widget.onSubmitted,
       textInputAction: widget.textInputAction,

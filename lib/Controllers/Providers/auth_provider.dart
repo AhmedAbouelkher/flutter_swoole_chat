@@ -16,13 +16,14 @@ class AuthProvider extends ChangeNotifier {
 
   User? _user;
   User? get user => _user;
-  int? get userID => _user?.id;
+  int get userID => _user?.id ?? -1;
 
   String? get userToken => _authRepository.userToken;
 
   Future<void> registerUser({required RegisterUser user}) async {
     try {
-      await _authRepository.registerUser(user: user);
+      final _result = await _authRepository.registerUser(user: user);
+      _user = _result.user;
     } catch (e) {
       rethrow;
     }
@@ -33,7 +34,8 @@ class AuthProvider extends ChangeNotifier {
     required String password,
   }) async {
     try {
-      await _authRepository.loginUser(email: email, password: password);
+      final _result = await _authRepository.loginUser(email: email, password: password);
+      _user = _result.user;
     } catch (e) {
       rethrow;
     }
@@ -49,7 +51,8 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> fetchUserData() async {
     try {
-      await _authRepository.fetchUserData();
+      _user = await _authRepository.fetchUserData();
+      notifyListeners();
     } catch (e) {
       rethrow;
     }

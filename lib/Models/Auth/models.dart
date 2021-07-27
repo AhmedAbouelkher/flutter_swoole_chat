@@ -33,7 +33,6 @@ class User {
   final String? image;
 
   factory User.fromJson(Map<String, dynamic> json) {
-    print(json);
     return User(
       id: json["id"],
       name: json["name"],
@@ -50,6 +49,11 @@ class User {
     final _firstInitial = _splittedName.first.split("").first;
     final _lastInitial = _splittedName.last.split("").first;
     return _firstInitial + _lastInitial;
+  }
+
+  @override
+  String toString() {
+    return 'User(id: $id, name: $name, email: $email, updatedAt: $updatedAt, createdAt: $createdAt, imagePath: $imagePath, image: $image)';
   }
 }
 

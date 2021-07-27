@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_swoole_chat/Controllers/Providers/auth_provider.dart';
 import 'package:flutter_swoole_chat/Controllers/Providers/chat_provider.dart';
 import 'package:flutter_swoole_chat/Screens/auth/auth_screen.dart';
+import 'package:flutter_swoole_chat/Screens/home/search_screen.dart';
 import 'package:flutter_swoole_chat/Widgets/widget.dart';
 
 import 'chat_screen.dart';
@@ -18,7 +19,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     WidgetsBinding.instance?.addPostFrameCallback((_) {
-      ChatProvider.get(context).fetchChats();
+      ChatProvider.get(context)
+        ..fetchChats()
+        ..initSocket(AuthProvider.get(context).userToken!);
+
+      setState(() {});
     });
     super.initState();
   }
@@ -37,20 +42,14 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: _performLogout,
               icon: Icon(Icons.login_outlined),
             ),
-            bottom: AppBarButtom(
-              child: Container(
-                color: Colors.white,
-                child: CTextField(
-                  hintText: "Search users...",
-                  inputDecoration: InputDecoration(
-                    border: InputBorder.none,
-                    prefixIcon: Icon(
-                      Icons.search,
-                    ),
-                  ),
-                ),
+            actions: [
+              IconButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => SearchScreen()));
+                },
+                icon: Icon(Icons.search),
               ),
-            ),
+            ],
           ),
           body: SafeArea(
             bottom: false,
@@ -75,12 +74,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     final _latestMessage = _chat.latestMassage;
                     return ListTile(
                       onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(chat: _chat)));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) {
+                              return ChatScreen(
+                                chatId: _chat.id,
+                                toUserName: _chat.user?.name,
+                              );
+                            },
+                          ),
+                        );
                       },
                       leading: CircleAvatar(
-                        child: Text(_chat.user1.initials),
+                        child: Text(_chat.user?.initials ?? "-"),
                       ),
-                      title: Text(_chat.user1.name),
+                      title: Text(_chat.user?.name ?? "-"),
                       subtitle: _buildChatListTileSubtitle(_latestMessage),
                       trailing: Icon(Icons.keyboard_arrow_right_outlined),
                     );
@@ -100,9 +109,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case MessageType.text:
         return ClippedText(message.content, maxLength: 30);
       case MessageType.audio:
-        return Text("🎤  Voicenote attachment");
+        return Text("🎤  Voice Note Attachment");
       case MessageType.image:
-        return Text("📷  Photo attachment");
+        return Text("📷  Photo Attachment");
     }
   }
 

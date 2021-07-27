@@ -1,5 +1,3 @@
-import 'package:flutter_swoole_chat/Helpers/functions.dart';
-
 import 'Auth/models.dart';
 import 'chat_events.dart';
 
@@ -41,21 +39,21 @@ class Chats {
 
 class Chat {
   Chat({
-    required this.id,
-    required this.user1,
-    required this.user2,
+    this.id,
+    this.user,
     this.latestMassage,
   });
 
-  final int id;
-  final User user1;
-  final User user2;
+  final int? id;
+  final User? user;
   final ChatMessage? latestMassage;
 
   factory Chat.fromJson(Map<String, dynamic> json) => Chat(
         id: json["id"] == null ? null : json["id"],
-        user1: User.fromJson(json["user_1"]),
-        user2: User.fromJson(json["user_2"]),
+        user: User.fromJson(json["user"]),
         latestMassage: json["latest_massage"] == null ? null : ChatMessage.fromJson(json["latest_massage"]),
       );
+
+  @override
+  String toString() => 'Chat(id: $id, user: $user, latestMassage: $latestMassage)';
 }

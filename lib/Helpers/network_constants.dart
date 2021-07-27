@@ -11,5 +11,7 @@ class NetworkConstants {
   static const logout = _authAPI + "logout";
   static const userData = _authAPI + "user";
 
+  static const users = _url + "users";
+
   static const socketURL = "wss://flutterchat.ga:6002";
 }

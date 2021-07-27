@@ -25,7 +25,7 @@ class ChatMessage extends ChatEvent {
     this.id,
     required this.content,
     required this.messageType,
-    required this.createdAt,
+    this.createdAt,
     this.chatId,
     this.userId,
     this.seen,
@@ -35,7 +35,7 @@ class ChatMessage extends ChatEvent {
   final int? id;
   final String content;
   final MessageType messageType;
-  final DateTime createdAt;
+  final DateTime? createdAt;
   final int? chatId;
   final int? userId;
   final DateTime? updatedAt;
